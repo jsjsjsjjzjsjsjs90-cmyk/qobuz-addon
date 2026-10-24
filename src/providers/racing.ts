@@ -115,13 +115,15 @@ export function createRacingProvider(
   eljohnzc?: QobuzProvider,
   instable?: QobuzProvider,
 ): QobuzProvider {
-  const sources: Source[] = [
-    { name: 'lastbabe', provider: lastbabe },
-    { name: 'qobuzdl', provider: qobuzdl },
-  ];
-  if (deezer) sources.unshift({ name: 'deezer', provider: deezer });
-  if (monochrome) sources.unshift({ name: 'monochrome', provider: monochrome });
-  if (eljohnzc) sources.unshift({ name: 'eljohnzc', provider: eljohnzc });
-  if (instable) sources.unshift({ name: 'instable', provider: instable });
+  const sources: Source[] = [];
+
+  // Ordered by typical speed/reliability
+  if (monochrome) sources.push({ name: 'monochrome', provider: monochrome });
+  sources.push({ name: 'qobuzdl', provider: qobuzdl });
+  if (instable) sources.push({ name: 'instable', provider: instable });
+  if (deezer) sources.push({ name: 'deezer', provider: deezer });
+  sources.push({ name: 'lastbabe', provider: lastbabe });
+  if (eljohnzc) sources.push({ name: 'eljohnzc', provider: eljohnzc });
+
   return new RacingProvider(sources);
 }
