@@ -29,10 +29,14 @@ export function createProvider(config: Config): QobuzProvider {
 }
 
 export function createSourceProvider(config: Config, source: IsolatedSource): QobuzProvider {
-  if (source === 'qobuzdl') return new QobuzDlProvider({ ...config, apiBaseUrl: config.apiBaseUrl ?? 'https://qobuz-dll.foreyou.workers.dev' });
-  if (source === 'monochrome') return new MonochromeProvider(config);
+  // เรียงตามตัวอักษร: deezer, eljohnzc, instable, lastbabe, monochrome, qobuzdl
   if (source === 'deezer') return new RemoteAddonProvider(config);
-  if (source === 'eljohnzc') return new EljohnzcProvider(config); // 🌟 Swapped here too!
+  if (source === 'eljohnzc') return new EljohnzcProvider(config);
   if (source === 'instable') return new InstableProvider(config);
-  return new LastBabeProvider(config);
+  if (source === 'lastbabe') return new LastBabeProvider(config);
+  if (source === 'monochrome') return new MonochromeProvider(config);
+  if (source === 'qobuzdl') return new QobuzDlProvider({ ...config, apiBaseUrl: config.apiBaseUrl ?? 'https://qobuz-dll.foreyou.workers.dev' });
+  
+  // Fallback สุดท้าย (ไม่ควรเกิดขึ้น แต่ต้องมี)
+  return new StubQobuzProvider(); 
 }
