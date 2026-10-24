@@ -8,6 +8,7 @@ import { createRacingProvider } from './racing.js';
 import { MonochromeProvider } from './monochrome.js';
 import { RemoteAddonProvider } from './remote-addon.js';
 import { InstableProvider } from './instable.js';
+import { EljohnzcProvider } from './eljohnzc.js'; // 🌟 Add this line
 
 export type IsolatedSource = 'qobuzdl' | 'lastbabe' | 'monochrome' | 'deezer' | 'eljohnzc' | 'instable';
 
