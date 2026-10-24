@@ -20,13 +20,11 @@ const manifests = {
   instable: { id: 'com.bitchord.qobuz.instable', name: 'Instable Lossless', version: '1.0.0' },
 } as const;
 
-// 🌟 1. เพิ่ม Route หน้าเว็บหลัก (ตัวที่หายไป)
+// Home page and basic health
 app.get('/', async (_request, reply) => reply.type('text/html; charset=utf-8').send(homePage));
-
-// 🌟 2. เพิ่ม Route เช็คสถานะเซิร์ฟเวอร์
 app.get('/health', async () => ({ ok: true }));
 
-// 3. Route สำหรับเช็คสถานะ Source ทั้ง 6 เจ้า
+// 🌟 THE NEW SMART HEALTH CHECK
 app.get<{ Querystring: { q?: string } }>('/health/sources', async (request) => {
   const testQuery = request.query.q || 'love'; 
   const sourceNames: IsolatedSource[] = ['qobuzdl', 'lastbabe', 'monochrome', 'deezer', 'eljohnzc', 'instable'];
@@ -46,12 +44,10 @@ app.get<{ Querystring: { q?: string } }>('/health/sources', async (request) => {
           timeoutPromise
         ]);
 
-        const latency = Date.now() - startTime;
-
         return {
           source: sourceName,
           status: tracks.length > 0 ? 'healthy' : 'empty',
-          latencyMs: latency,
+          latencyMs: Date.now() - startTime,
           resultCount: tracks.length,
         };
       } catch (error: any) {
@@ -65,16 +61,25 @@ app.get<{ Querystring: { q?: string } }>('/health/sources', async (request) => {
     })
   );
 
-  const overallStatus = results.every(r => r.status === 'healthy' || r.status === 'empty') ? 'all_systems_operational' : 'partial_outage';
+  const healthyCount = results.filter(r => r.status === 'healthy' || r.status === 'empty').length;
+  
+  // 🌟 New Logic: Optimistic reporting. 
+  let overallStatus = 'outage';
+  if (healthyCount === results.length) overallStatus = 'all_systems_operational';
+  else if (healthyCount >= 4) overallStatus = 'operational_with_minor_outages';
+  else if (healthyCount >= 2) overallStatus = 'degraded_but_functional';
 
   return {
     timestamp: new Date().toISOString(),
     testQuery,
     overallStatus,
+    healthySources: healthyCount,
+    totalSources: results.length,
     providers: results,
   };
 });
 
+// Addon registration
 registerAddon('', createProvider(config), manifests.root);
 registerAddon('/a', createSourceProvider(config, 'qobuzdl'), manifests.qobuzdl);
 registerAddon('/b', createSourceProvider(config, 'lastbabe'), manifests.lastbabe);
@@ -141,14 +146,11 @@ function parseQuality(value?: string): Quality {
   throw badRequest('quality must be LOSSLESS, HIGH, or LOW');
 }
 
-// ... โค้ดด้านบนทั้งหมด ...
-
 if (process.env.VERCEL !== '1') {
   app.listen({ host: config.host, port: config.port }).then(() => {
     app.log.info({ host: config.host, port: config.port, provider: config.provider }, 'BitChord addon listening');
   }).catch(error => { app.log.error(error); process.exit(1); });
 }
 
-// 🌟 เพิ่มบรรทัดนี้เข้าไป
 export default app; 
 export { app, parseQuality };
